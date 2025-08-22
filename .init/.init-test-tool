@@ -1,0 +1,4 @@
+{
+    "command": "npm run test",
+    "working_directory": "/home/kavia/workspace/code-generation/product-inventory-manager-162769-162778/product_manager_frontend"
+}
