@@ -1,47 +1,77 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
+import React, { useMemo, useState } from 'react';
 import './App.css';
+import './styles/theme.css';
+import './styles/layout.css';
+import './styles/components.css';
+import Sidebar from './components/Sidebar';
+import Topbar from './components/Topbar';
+import ProductList from './pages/ProductList';
+import ProductForm from './pages/ProductForm';
 
-// PUBLIC_INTERFACE
+/**
+ * PUBLIC_INTERFACE
+ * App is the main entry rendering a responsive dashboard layout.
+ * It provides navigation between product list and product form views and sets theme variables.
+ */
 function App() {
-  const [theme, setTheme] = useState('light');
+  const [route, setRoute] = useState('products'); // 'products' | 'add' | 'edit'
+  const [editingProduct, setEditingProduct] = useState(null);
 
-  // Effect to apply theme to document element
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  // PUBLIC_INTERFACE
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+  const navigate = (nextRoute, state = {}) => {
+    if (nextRoute === 'edit') {
+      setEditingProduct(state.product || null);
+    } else {
+      setEditingProduct(null);
+    }
+    setRoute(nextRoute);
   };
 
+  const content = useMemo(() => {
+    switch (route) {
+      case 'add':
+        return (
+          <ProductForm
+            onCancel={() => navigate('products')}
+            onSaved={() => navigate('products')}
+          />
+        );
+      case 'edit':
+        return (
+          <ProductForm
+            product={editingProduct}
+            onCancel={() => navigate('products')}
+            onSaved={() => navigate('products')}
+          />
+        );
+      case 'products':
+      default:
+        return (
+          <ProductList
+            onAdd={() => navigate('add')}
+            onEdit={(p) => navigate('edit', { product: p })}
+          />
+        );
+    }
+  }, [route, editingProduct]);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <button 
-          className="theme-toggle" 
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
-        </button>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="app-shell" data-theme="light">
+      <Sidebar
+        onNavigate={(r) => navigate(r)}
+        active={route}
+      />
+      <div className="main-area">
+        <Topbar
+          title={route === 'products' ? 'Products' : route === 'add' ? 'Add Product' : 'Edit Product'}
+          primaryAction={
+            route !== 'products'
+              ? { label: 'Back to Products', onClick: () => navigate('products') }
+              : null
+          }
+        />
+        <main className="content">{content}</main>
+        <footer className="footer">Product Manager • Minimal React UI</footer>
+      </div>
     </div>
   );
 }
